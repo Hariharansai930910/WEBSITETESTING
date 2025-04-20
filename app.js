@@ -70,35 +70,41 @@ if (loginForm) {
 }
 
 // === INDEX PAGE ===
+// === INDEX PAGE (Find Match Logic) ===
 const matchBtn = document.getElementById('find-match-btn');
 if (matchBtn) {
   matchBtn.addEventListener('click', async () => {
-    const food = document.getElementById('food-name').value;
+    const food = document.getElementById('food-name').value.trim();
     const slices = document.getElementById('slice-count').value;
     const preference = document.getElementById('match-pref').value;
-    const user = auth.currentUser;
+    const user = firebase.auth().currentUser;
 
-    if (!user) {
-      window.location.href = "login-extended.html";
+    if (!food || !slices) {
+      alert("Please enter all details.");
       return;
     }
-  await setDoc(doc(db, 'match_requests', user.uid), {
-    userId: user.uid,
-    email: user.email,
-    food,
-    slices,
-    preference,
-    timestamp: Date.now(),
-    deliveryOption: "waiting"
-  });
 
-    await fetch("https://your-backend-url/send-email", {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sender: 'Sharemaate@gmail.com', matchInfo: { slices, preference } })
-    });
+    if (!user) {
+      alert("You must be logged in first!");
+      window.location.href = 'login-extended.html';
+      return;
+    }
 
-    window.location.href = 'waiting.html';
+    try {
+      const db = firebase.firestore();
+      await db.collection("match_requests").doc(user.uid).set({
+        userId: user.uid,
+        email: user.email,
+        food,
+        slices,
+        preference,
+        timestamp: new Date().toISOString()
+      });
+      window.location.href = 'waiting.html';
+    } catch (err) {
+      alert("Something went wrong. Please try again.");
+      console.error(err);
+    }
   });
 }
 
