@@ -35,5 +35,14 @@
     Find Match
   </button>
 
+ <!-- Put this in your index.html if needed -->
+ <script>
+  firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+      window.location.href = "login-extended.html";
+    }
+  });
+ </script>
+
 </body>
 </html>
