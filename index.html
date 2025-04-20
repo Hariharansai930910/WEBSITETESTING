@@ -1,48 +1,75 @@
+<!-- ✅ index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>SliceMate 🍱</title>
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-yellow-100 flex flex-col items-center justify-center min-h-screen">
-
   <h1 class="text-3xl font-bold mb-4">🍱 SliceMate</h1>
   <p class="text-lg mb-6">Get only what you want. Split the rest!</p>
 
-  <!-- Food Name Input -->
-  <label for="foodInput" class="text-md font-semibold">What food are you ordering?</label>
-  <input id="foodInput" type="text" placeholder="e.g., Pizza, Biryani, Cake"
-         class="mt-2 border-2 rounded px-4 py-2 text-center w-64" />
+  <input id="food-name" type="text" placeholder="e.g., Pizza" class="mb-3 px-4 py-2 border rounded text-center w-64" />
+  <input id="slice-count" type="number" min="1" max="20" class="mb-3 px-4 py-2 border rounded text-center w-24" />
 
-  <!-- Slice Count Input -->
-  <label for="sliceInput" class="text-md font-semibold mt-4">How many slices/portions do you want?</label>
-  <input id="sliceInput" type="number" min="1" max="20"
-         class="mt-2 border-2 rounded px-4 py-2 text-center w-24" />
-
-  <!-- Matching Preference -->
-  <label for="matchPref" class="block mt-4 text-md font-medium">Matching Preference:</label>
-  <select id="matchPref" class="border border-gray-400 rounded px-4 py-2 mt-2">
+  <select id="match-pref" class="mb-4 px-4 py-2 border rounded">
     <option value="auto">✅ Auto-Match Instantly</option>
     <option value="manual">⏸ Ask Me Before Matching</option>
   </select>
 
-  <!-- Find Match Button -->
-  <button id="find-match-btn" class="mt-6 px-6 py-2 bg-green-600 text-white rounded shadow-lg">
-    Find Match
-  </button>
+  <button id="find-match-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition">Find Match</button>
 
- <!-- Put this in your index.html if needed -->
- <script>
-  firebase.auth().onAuthStateChanged((user) => {
-    if (!user) {
-      window.location.href = "login-extended.html";
-    }
-  });
- </script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) {
+        window.location.href = 'login-extended.html';
+      }
+    });
+
+    document.getElementById('find-match-btn').addEventListener('click', async () => {
+      const food = document.getElementById('food-name').value.trim();
+      const slices = document.getElementById('slice-count').value;
+      const preference = document.getElementById('match-pref').value;
+      const user = firebase.auth().currentUser;
+
+      if (!food || !slices) {
+        alert("Please enter both food and slice count!");
+        return;
+      }
+
+      if (!user) {
+        alert("You must be logged in first!");
+        return;
+      }
+
+      try {
+        await db.collection("match_requests").doc(user.uid).set({
+          userId: user.uid,
+          email: user.email,
+          food,
+          slices,
+          preference,
+          timestamp: new Date().toISOString()
+        });
+        window.location.href = 'waiting.html';
+      } catch (err) {
+        alert("Something went wrong. Try again.");
+        console.error(err);
+      }
+    });
+  </script>
 </body>
 </html>
