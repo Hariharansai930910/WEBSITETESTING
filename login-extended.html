@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SliceMate Login 🍕</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-yellow-50 flex flex-col justify-center items-center min-h-screen">
+  <div class="bg-white p-6 rounded-xl shadow-lg w-80">
+    <h1 class="text-2xl font-bold mb-4 text-center">🍕 SliceMate Login</h1>
+    <form id="login-form" class="flex flex-col space-y-4">
+      <input type="email" name="email" placeholder="Email" required class="border rounded px-3 py-2">
+      <input type="password" name="password" placeholder="Password" required class="border rounded px-3 py-2">
+      <button type="submit" class="bg-green-600 text-white py-2 rounded hover:bg-green-700">Login / Signup</button>
+    </form>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7Qozb-m-XTHx3tXWVGI5ObgLN6TwmSKc",
+      authDomain: "shrmte.firebaseapp.com",
+      projectId: "shrmte",
+      storageBucket: "shrmte.appspot.com",
+      messagingSenderId: "660245185229",
+      appId: "1:660245185229:web:d9fa02e30892bad9fd5f84"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = e.target.email.value.trim();
+      const password = e.target.password.value.trim();
+
+      try {
+        const userCred = await auth.signInWithEmailAndPassword(email, password);
+        console.log('✅ Logged in');
+        await db.collection('users_nearby').doc(userCred.user.uid).set({
+          email: email,
+          available_to_match: true,
+          last_seen: new Date().toISOString()
+        });
+        window.location.href = 'index.html';
+      } catch (err) {
+        if (err.code === 'auth/user-not-found') {
+          try {
+            const newUser = await auth.createUserWithEmailAndPassword(email, password);
+            console.log('👶 New user signed up');
+            await db.collection('users_nearby').doc(newUser.user.uid).set({
+              email: email,
+              available_to_match: true,
+              last_seen: new Date().toISOString()
+            });
+            window.location.href = 'index.html';
+          } catch (signupErr) {
+            alert('Signup failed: ' + signupErr.message);
+          }
+        } else if (err.code === 'auth/wrong-password') {
+          alert('❌ Incorrect password. Try again or reset.');
+        } else {
+          alert('Error: ' + err.message);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Waiting for a Match - SliceMate 🍕</title>
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="app.js" defer></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-yellow-100 flex flex-col items-center justify-center min-h-screen">
+
+  <h1 class="text-3xl font-bold mb-4 text-center">⏳ Waiting for a Match...</h1>
+  <p class="text-md text-center mb-6">Sit tight! We're looking for a slice partner 🍕</p>
+
+  <div class="flex flex-col items-center space-y-4">
+    <label class="font-medium">Select Wait Time:</label>
+    <select id="wait-time" class="border px-4 py-2 rounded shadow">
+      <option value="120">2 Minutes</option>
+      <option value="300">5 Minutes</option>
+      <option value="0">Wait Indefinitely</option>
+    </select>
+
+    <div id="countdown" class="text-2xl font-bold text-red-600 mt-4"></div>
+
+    <button id="cancel-match" class="mt-8 px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 shadow-lg">
+      Cancel Match
+    </button>
+  </div>
+
+  <script>
+    const waitSelect = document.getElementById("wait-time");
+    const countdownEl = document.getElementById("countdown");
+    let timer;
+
+    function startTimer(duration) {
+      clearInterval(timer);
+      if (duration <= 0) {
+        countdownEl.textContent = "Waiting indefinitely...";
+        return;
+      }
+
+      let remaining = duration;
+      timer = setInterval(() => {
+        const minutes = Math.floor(remaining / 60);
+        const seconds = remaining % 60;
+        countdownEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        remaining--;
+
+        if (remaining < 0) {
+          clearInterval(timer);
+          alert("⏳ No match found. Please try again!");
+          window.location.href = "index.html";
+        }
+      }, 1000);
+    }
+
+    waitSelect.addEventListener("change", () => {
+      const selected = parseInt(waitSelect.value);
+      startTimer(selected);
+    });
+
+    // Start default (2 mins)
+    startTimer(parseInt(waitSelect.value));
+  </script>
+
+</body>
+</html>
